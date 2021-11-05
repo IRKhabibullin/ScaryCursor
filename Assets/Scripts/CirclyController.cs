@@ -9,36 +9,68 @@ public class CirclyController : MonoBehaviour
     [SerializeField] private LayerMask groundLayer;
     [SerializeField] private Transform finishArea;
     [SerializeField] private float fleeRadius;
+    [SerializeField] private float fleeDistance;
+    [SerializeField] private Transform scaryCursor;
     private NavMeshAgent agent;
     public TextMeshProUGUI debugText;
+
+    [SerializeField] private int baseAcceleration;
+    [SerializeField] private int baseSpeed;
+    [SerializeField] private int runSpeed;
+    [SerializeField] private int runAcceleration;
+    private bool headingToFinish = false;
+
+    private bool started = false;
 
     void Start()
     {
         agent = GetComponent<NavMeshAgent>();
-        agent.SetDestination(finishArea.position);
     }
 
     void Update()
     {
+        if (!started) return;
+
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        RaycastHit hit;
-        if (Physics.Raycast(ray, out hit, Mathf.Infinity, groundLayer))
+        if (Physics.Raycast(ray, Mathf.Infinity, groundLayer))
         {
-            debugText.text = hit.point.ToString();
-            if (Vector3.Distance(transform.position, hit.point) < fleeRadius)
+            if (Vector3.Distance(transform.position, scaryCursor.position) > fleeDistance)
             {
-                Vector3 newDestination = transform.position * 2 - hit.point;
-                agent.SetDestination(newDestination);
+                if (!headingToFinish)
+                    HeadToFinish();
+            }
+            else if (Vector3.Distance(transform.position, scaryCursor.position) < fleeRadius)
+            {
+                RunAway(scaryCursor.position);
             }
         }
-        /*Vector3 mousePosition = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, -Camera.main.transform.position.z));
-        mousePosition.y = 0;
-        debugText.text = mousePosition.ToString();
-        if (Vector3.Distance(transform.position, mousePosition) < fleeRadius)
-        {
-            Vector3 newDestination = transform.position * 2 - mousePosition;
-            agent.SetDestination(newDestination);
-        }*/
+    }
+
+    private void RunAway(Vector3 scaryPoint) {
+        headingToFinish = false;
+
+        agent.speed = runSpeed;
+        agent.acceleration = runAcceleration;
+
+        Vector3 newDestination = transform.position + (transform.position - scaryPoint).normalized * fleeDistance;
+        agent.SetDestination(newDestination);
+
+        Debug.DrawLine(transform.position, newDestination, Color.red, 0);
+    }
+
+    public void StartGame()
+    {
+        started = true;
+        HeadToFinish();
+    }
+
+    public void HeadToFinish()
+    {
+        headingToFinish = true;
+        /*agent.velocity = Vector3.zero;*/
+        agent.speed = baseSpeed;
+        agent.acceleration = baseAcceleration;
+        agent.SetDestination(finishArea.position);
     }
 
     private void OnTriggerEnter(Collider other)
@@ -47,5 +79,10 @@ public class CirclyController : MonoBehaviour
         {
             Debug.Log("Finish trigger");
         }
+    }
+
+    public void ChangeFleeRadius(float newValue)
+    {
+        fleeRadius = newValue;
     }
 }
