@@ -11,9 +11,11 @@ public class CirclyController : MonoBehaviour
     [SerializeField] private float fleeRadius;
     [SerializeField] private float fleeDistance;
     [SerializeField] private Transform scaryCursor;
+    [SerializeField] private GameObject gameoverWindow;
     private NavMeshAgent agent;
     public TextMeshProUGUI debugText;
 
+    [SerializeField] private Vector3 startPosition;
     [SerializeField] private float baseAcceleration;
     [SerializeField] private float baseSpeed;
     private float fleeSpeed;
@@ -24,6 +26,7 @@ public class CirclyController : MonoBehaviour
 
     void Start()
     {
+        transform.position = startPosition;
         agent = GetComponent<NavMeshAgent>();
         fleeRadius = GetComponent<SphereCollider>().bounds.extents.x + scaryCursor.GetComponent<SphereCollider>().bounds.extents.x;
         fleeDistance = fleeRadius * 1.5f;
@@ -81,7 +84,12 @@ public class CirclyController : MonoBehaviour
     {
         if (((1 << other.gameObject.layer) & finishAreaLayer) != 0)
         {
-            Debug.Log("Finish trigger");
+            HeadToFinish();
+            transform.position = startPosition;
+            agent.velocity = Vector3.zero;
+            agent.ResetPath();
+            gameoverWindow.SetActive(true);
+            started = false;
         }
     }
 
