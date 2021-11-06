@@ -14,17 +14,21 @@ public class CirclyController : MonoBehaviour
     private NavMeshAgent agent;
     public TextMeshProUGUI debugText;
 
-    [SerializeField] private int baseAcceleration;
-    [SerializeField] private int baseSpeed;
-    [SerializeField] private int runSpeed;
-    [SerializeField] private int runAcceleration;
-    private bool headingToFinish = false;
+    [SerializeField] private float baseAcceleration;
+    [SerializeField] private float baseSpeed;
+    private float fleeSpeed;
+    private float fleeAcceleration;
 
     private bool started = false;
+    private bool isFleeing = false;
 
     void Start()
     {
         agent = GetComponent<NavMeshAgent>();
+        fleeRadius = GetComponent<SphereCollider>().bounds.extents.x + scaryCursor.GetComponent<SphereCollider>().bounds.extents.x;
+        fleeDistance = fleeRadius * 1.5f;
+        fleeSpeed = baseSpeed * 1.5f;
+        fleeAcceleration = baseAcceleration * 10;
     }
 
     void Update()
@@ -34,24 +38,25 @@ public class CirclyController : MonoBehaviour
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         if (Physics.Raycast(ray, Mathf.Infinity, groundLayer))
         {
-            if (Vector3.Distance(transform.position, scaryCursor.position) > fleeDistance)
+            if (isFleeing && Vector3.Distance(transform.position, scaryCursor.position) > fleeDistance)
             {
-                if (!headingToFinish)
-                    HeadToFinish();
+                HeadToFinish();
             }
             else if (Vector3.Distance(transform.position, scaryCursor.position) < fleeRadius)
             {
-                RunAway(scaryCursor.position);
+                FleeAway(scaryCursor.position);
             }
         }
+        debugText.text = agent.destination.ToString();
     }
 
-    private void RunAway(Vector3 scaryPoint) {
-        headingToFinish = false;
-
-        agent.speed = runSpeed;
-        agent.acceleration = runAcceleration;
-
+    private void FleeAway(Vector3 scaryPoint) {
+        if (!isFleeing)
+        {
+            isFleeing = true;
+            agent.speed = fleeSpeed;
+            agent.acceleration = fleeAcceleration;
+        }
         Vector3 newDestination = transform.position + (transform.position - scaryPoint).normalized * fleeDistance;
         agent.SetDestination(newDestination);
 
@@ -66,11 +71,10 @@ public class CirclyController : MonoBehaviour
 
     public void HeadToFinish()
     {
-        headingToFinish = true;
-        /*agent.velocity = Vector3.zero;*/
         agent.speed = baseSpeed;
         agent.acceleration = baseAcceleration;
         agent.SetDestination(finishArea.position);
+        isFleeing = false;
     }
 
     private void OnTriggerEnter(Collider other)
@@ -81,8 +85,23 @@ public class CirclyController : MonoBehaviour
         }
     }
 
-    public void ChangeFleeRadius(float newValue)
+    public void ChangeFleeRadius()
     {
-        fleeRadius = newValue;
+        fleeRadius = GetComponent<SphereCollider>().bounds.extents.x + scaryCursor.GetComponent<SphereCollider>().bounds.extents.x;
+        fleeDistance = fleeRadius * 1.5f;
+    }
+
+    public void OnSpeedChanged(float newValue)
+    {
+        baseSpeed = newValue;
+        fleeSpeed = newValue * 1.5f;
+        agent.speed = isFleeing ? fleeSpeed : baseSpeed;
+    }
+
+    public void OnAccelerationChanged(float newValue)
+    {
+        baseAcceleration = newValue;
+        fleeAcceleration = newValue * 10;
+        agent.acceleration = isFleeing ? fleeAcceleration : baseAcceleration;
     }
 }
