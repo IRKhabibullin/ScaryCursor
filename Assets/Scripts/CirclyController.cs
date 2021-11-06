@@ -1,56 +1,49 @@
 using UnityEngine;
 using UnityEngine.AI;
-using TMPro;
+using UnityEngine.Events;
 
 [RequireComponent(typeof(NavMeshAgent))]
 public class CirclyController : MonoBehaviour
 {
-    [SerializeField] private LayerMask finishAreaLayer;
-    [SerializeField] private LayerMask groundLayer;
+    private NavMeshAgent agent;
+    private float fleeSpeed;
+    private float fleeAcceleration;
+    private bool isFleeing = false;
+
+    [SerializeField] private Transform scaryCursor;
     [SerializeField] private Transform finishArea;
     [SerializeField] private float fleeRadius;
     [SerializeField] private float fleeDistance;
-    [SerializeField] private Transform scaryCursor;
-    [SerializeField] private GameObject gameoverWindow;
-    private NavMeshAgent agent;
-    public TextMeshProUGUI debugText;
-
     [SerializeField] private Vector3 startPosition;
-    [SerializeField] private float baseAcceleration;
     [SerializeField] private float baseSpeed;
-    private float fleeSpeed;
-    private float fleeAcceleration;
+    [SerializeField] private float baseAcceleration;
 
-    private bool started = false;
-    private bool isFleeing = false;
+    public bool started = false;
+    public UnityEvent finishEvent;
 
     void Start()
     {
-        transform.position = startPosition;
         agent = GetComponent<NavMeshAgent>();
-        fleeRadius = GetComponent<SphereCollider>().bounds.extents.x + scaryCursor.GetComponent<SphereCollider>().bounds.extents.x;
-        fleeDistance = fleeRadius * 1.5f;
+
+        transform.position = startPosition;
         fleeSpeed = baseSpeed * 1.5f;
         fleeAcceleration = baseAcceleration * 10;
+        fleeRadius = GetComponent<SphereCollider>().bounds.extents.x + scaryCursor.GetComponent<SphereCollider>().bounds.extents.x;
+        fleeDistance = fleeRadius * 1.5f;
     }
 
     void Update()
     {
         if (!started) return;
 
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        if (Physics.Raycast(ray, Mathf.Infinity, groundLayer))
+        if (isFleeing && Vector3.Distance(transform.position, scaryCursor.position) > fleeDistance)
         {
-            if (isFleeing && Vector3.Distance(transform.position, scaryCursor.position) > fleeDistance)
-            {
-                HeadToFinish();
-            }
-            else if (Vector3.Distance(transform.position, scaryCursor.position) < fleeRadius)
-            {
-                FleeAway(scaryCursor.position);
-            }
+            HeadToFinish();
         }
-        debugText.text = agent.destination.ToString();
+        else if (Vector3.Distance(transform.position, scaryCursor.position) < fleeRadius)
+        {
+            FleeAway(scaryCursor.position);
+        }
     }
 
     private void FleeAway(Vector3 scaryPoint) {
@@ -62,14 +55,6 @@ public class CirclyController : MonoBehaviour
         }
         Vector3 newDestination = transform.position + (transform.position - scaryPoint).normalized * fleeDistance;
         agent.SetDestination(newDestination);
-
-        Debug.DrawLine(transform.position, newDestination, Color.red, 0);
-    }
-
-    public void StartGame()
-    {
-        started = true;
-        HeadToFinish();
     }
 
     public void HeadToFinish()
@@ -80,22 +65,10 @@ public class CirclyController : MonoBehaviour
         isFleeing = false;
     }
 
-    private void OnTriggerEnter(Collider other)
+    #region sliders handlers
+    public void ChangeFleeRadius(float newValue)
     {
-        if (((1 << other.gameObject.layer) & finishAreaLayer) != 0)
-        {
-            HeadToFinish();
-            transform.position = startPosition;
-            agent.velocity = Vector3.zero;
-            agent.ResetPath();
-            gameoverWindow.SetActive(true);
-            started = false;
-        }
-    }
-
-    public void ChangeFleeRadius()
-    {
-        fleeRadius = GetComponent<SphereCollider>().bounds.extents.x + scaryCursor.GetComponent<SphereCollider>().bounds.extents.x;
+        fleeRadius = GetComponent<SphereCollider>().bounds.extents.x + newValue / 2;
         fleeDistance = fleeRadius * 1.5f;
     }
 
@@ -111,5 +84,23 @@ public class CirclyController : MonoBehaviour
         baseAcceleration = newValue;
         fleeAcceleration = newValue * 10;
         agent.acceleration = isFleeing ? fleeAcceleration : baseAcceleration;
+    }
+    #endregion
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.gameObject.layer == finishArea.gameObject.layer)
+        {
+            finishEvent.Invoke();
+        }
+    }
+
+    public void Reset()
+    {
+        transform.position = startPosition;
+        agent.speed = baseSpeed;
+        agent.acceleration = baseAcceleration;
+        agent.velocity = Vector3.zero;
+        agent.ResetPath();
     }
 }
