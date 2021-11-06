@@ -42,6 +42,11 @@ public class GameController : MonoBehaviour
         gameoverWindow.SetActive(true);
     }
 
+    public void QuitGame()
+    {
+        Application.Quit();
+    }
+
     public void OnCursorScaleChanged(float newValue)
     {
         scaryCursor.transform.localScale = Vector3.one * newValue;
