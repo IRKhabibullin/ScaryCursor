@@ -327,6 +327,7 @@ Transform:
   m_LocalScale: {x: 7, y: 0.5, z: 7}
   m_Children:
   - {fileID: 1398208222}
+  - {fileID: 797338181}
   m_Father: {fileID: 508462157}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -970,9 +971,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   scaryCursor: {fileID: 453194714}
-  finishArea: {fileID: 139044211}
+  finishArea: {fileID: 797338181}
   fleeRadius: 5
-  fleeDistance: 10
+  safeDistance: 0
   startPosition: {x: -22.5, y: 0.6, z: -9.5}
   baseSpeed: 7
   baseAcceleration: 10
@@ -8503,6 +8504,36 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 739319621}
   m_CullTransparentMesh: 1
+--- !u!1 &797338180
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 797338181}
+  m_Layer: 6
+  m_Name: FinishAreaPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &797338181
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 797338180}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.2, y: 0, z: -0.2}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 139044211}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &797789551
 GameObject:
   m_ObjectHideFlags: 0

@@ -47,7 +47,6 @@ public class GameController : MonoBehaviour
 
     public void FinishGame()
     {
-        circly.started = false;
         gameoverWindow.SetActive(true);
     }
 

@@ -108,6 +108,11 @@ public class CirclyController : MonoBehaviour
         // if circle reached the finish area, invoke an event
         if (other.gameObject.layer == finishArea.gameObject.layer)
         {
+            started = false;
+            isFleeing = false;
+            agent.velocity = Vector3.zero;
+            agent.acceleration = 2;
+            agent.SetDestination(finishArea.position);
             finishEvent.Invoke();
         }
     }
