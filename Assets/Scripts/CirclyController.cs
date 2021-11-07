@@ -105,14 +105,18 @@ public class CirclyController : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        // if circle reached the finish area, invoke an event
+        // if circle reached the finish area
         if (other.gameObject.layer == finishArea.gameObject.layer)
         {
             started = false;
             isFleeing = false;
+
+            // set up the circle to smoothly enter the finish area
             agent.velocity = Vector3.zero;
             agent.acceleration = 2;
             agent.SetDestination(finishArea.position);
+
+            // invoke an event
             finishEvent.Invoke();
         }
     }
