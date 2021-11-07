@@ -12,14 +12,14 @@ public class CirclyController : MonoBehaviour
 
     [SerializeField] private Transform scaryCursor;
     [SerializeField] private Transform finishArea;
-    [SerializeField] private float fleeRadius;
-    [SerializeField] private float fleeDistance;
+    [SerializeField] private float fleeRadius;       // distance at which circle starts to run away from cursor
+    [SerializeField] private float safeDistance;     // distance at which fleeing circle "calms down" and heads to finish
     [SerializeField] private Vector3 startPosition;
     [SerializeField] private float baseSpeed;
     [SerializeField] private float baseAcceleration;
 
     public bool started = false;
-    public UnityEvent finishEvent;
+    public UnityEvent finishEvent;                   // invokes when circle reaches finish area
 
     void Start()
     {
@@ -29,34 +29,50 @@ public class CirclyController : MonoBehaviour
         fleeSpeed = baseSpeed * 1.5f;
         fleeAcceleration = baseAcceleration * 10;
         fleeRadius = GetComponent<SphereCollider>().bounds.extents.x + scaryCursor.GetComponent<SphereCollider>().bounds.extents.x;
-        fleeDistance = fleeRadius * 1.5f;
+        safeDistance = fleeRadius * 1.5f;
     }
 
     void Update()
     {
         if (!started) return;
 
-        if (isFleeing && Vector3.Distance(transform.position, scaryCursor.position) > fleeDistance)
+        UpdateMovement();
+    }
+
+    /// <summary>
+    /// Defining whether circle should run away from cursor or head to the finish area
+    /// </summary>
+    private void UpdateMovement()
+    {
+        if (Vector3.Distance(transform.position, scaryCursor.position) > safeDistance)
         {
-            HeadToFinish();
+            if (isFleeing)
+                HeadToFinish();
         }
-        else if (Vector3.Distance(transform.position, scaryCursor.position) < fleeRadius)
+        else if (isFleeing || Vector3.Distance(transform.position, scaryCursor.position) < fleeRadius)
         {
-            FleeAway(scaryCursor.position);
+            FleeAway();
         }
     }
 
-    private void FleeAway(Vector3 scaryPoint) {
+    /// <summary>
+    /// Calculating position where circle should run from cursor.
+    /// </summary>
+    private void FleeAway() {
+        // if circle wasn't fleeing before, increase the speed and acceleration
         if (!isFleeing)
         {
             isFleeing = true;
             agent.speed = fleeSpeed;
             agent.acceleration = fleeAcceleration;
         }
-        Vector3 newDestination = transform.position + (transform.position - scaryPoint).normalized * fleeDistance;
+        Vector3 newDestination = transform.position + (transform.position - scaryCursor.position).normalized * safeDistance;
         agent.SetDestination(newDestination);
     }
 
+    /// <summary>
+    /// Settings base speed and acceleration and setting destination point to finish area
+    /// </summary>
     public void HeadToFinish()
     {
         agent.speed = baseSpeed;
@@ -69,7 +85,7 @@ public class CirclyController : MonoBehaviour
     public void ChangeFleeRadius(float newValue)
     {
         fleeRadius = GetComponent<SphereCollider>().bounds.extents.x + newValue / 2;
-        fleeDistance = fleeRadius * 1.5f;
+        safeDistance = fleeRadius * 1.5f;
     }
 
     public void OnSpeedChanged(float newValue)
@@ -89,12 +105,16 @@ public class CirclyController : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
+        // if circle reached the finish area, invoke an event
         if (other.gameObject.layer == finishArea.gameObject.layer)
         {
             finishEvent.Invoke();
         }
     }
 
+    /// <summary>
+    /// Setting base speed and acceleration and putting circle to start position. Called before starting the game
+    /// </summary>
     public void Reset()
     {
         transform.position = startPosition;

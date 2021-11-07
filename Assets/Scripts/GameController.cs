@@ -2,12 +2,20 @@ using UnityEngine;
 
 public class GameController : MonoBehaviour
 {
-    [SerializeField] private GameObject scaryCursor;
+    [SerializeField] private GameObject scaryCursor;     // object which the circle runs away from. Syncs position with the cursor
     [SerializeField] private CirclyController circly;
     [SerializeField] private GameObject gameoverWindow;
     [SerializeField] private LayerMask groundLayer;
 
     void Update()
+    {
+        UpdateScaryCursor();
+    }
+
+    /// <summary>
+    /// Updating scaryCursor object's position and visibility according to cursor position
+    /// </summary>
+    private void UpdateScaryCursor()
     {
         if (!circly.started)
         {
@@ -17,6 +25,7 @@ public class GameController : MonoBehaviour
 
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
+        // if cursor is on the arena, then sync object's position and make it visible
         if (Physics.Raycast(ray, out hit, Mathf.Infinity, groundLayer))
         {
             scaryCursor.SetActive(true);
